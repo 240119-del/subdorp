@@ -2,295 +2,182 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Монитор статусов — Supabase + Google вход</title>
+    <title>Монитор статусов</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
-        .status-list {
-            margin-top: 20px;
-        }
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-        .username {
-            font-weight: bold;
-        }
-        select {
-            padding: 5px;
-        }
+        body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; }
+        button { background: #4285f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .user-info { background: #e8f0fe; padding: 15px; border-radius: 8px; margin: 15px 0; display: flex; justify-content: space-between; }
+        .status-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; }
+        select { padding: 5px 10px; border-radius: 20px; }
         .online { color: green; }
         .offline { color: gray; }
         .busy { color: orange; }
-        .my-id {
-            background: #f0f0f0;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-size: 12px;
-            word-break: break-all;
-            border-radius: 8px;
-        }
-        .auth-section {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .google-btn {
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: background-color 0.3s;
-        }
-        .google-btn:hover {
-            background-color: #357ae8;
-        }
-        .logout-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
-        .user-info {
-            background: #e8f4ff;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .hidden {
-            display: none;
-        }
-        .error {
-            color: red;
-            text-align: center;
-            padding: 10px;
-        }
+        .hidden { display: none; }
+        .error { color: red; background: #ffe0e0; padding: 10px; border-radius: 8px; }
+        .debug { background: #f4f4f4; padding: 10px; font-size: 11px; margin-top: 20px; border-radius: 5px; word-break: break-all; }
     </style>
 </head>
 <body>
 
-<div class="container" id="app">
-    <h1>📊 Монитор статусов</h1>
-    
-    <!-- Секция: Неавторизованный пользователь -->
-    <div id="unauth-section" class="auth-section">
-        <button id="google-signin-btn" class="google-btn">
-            🔐 Войти через Google
-        </button>
-        <p style="font-size: 12px; color: #666; margin-top: 15px;">
-            После входа вы сможете менять свой статус
-        </p>
+<h1>📊 Монитор статусов</h1>
+
+<div id="unauthed">
+    <button id="googleBtn">🔐 Войти через Google</button>
+    <p id="loginError" class="error" style="display:none;"></p>
+</div>
+
+<div id="authed" class="hidden">
+    <div class="user-info">
+        <span id="userEmail"></span>
+        <button id="logoutBtn">Выйти</button>
     </div>
-    
-    <!-- Секция: Авторизованный пользователь -->
-    <div id="auth-section" class="hidden">
-        <div class="user-info" id="user-info">
-            <span id="user-email">Загрузка...</span>
-            <button id="logout-btn" class="logout-btn">🚪 Выйти</button>
-        </div>
-        
-        <div id="my-id" class="my-id">
-            <strong>Ваш ID:</strong> <span id="user-id">Загрузка...</span>
-        </div>
-        
-        <div id="status-list" class="status-list">
-            Загрузка...
-        </div>
+    <div id="myIdBlock" style="background:#f0f0f0; padding:8px; border-radius:5px; margin:10px 0; font-size:12px;">
+        <strong>Ваш ID:</strong> <span id="myUserId"></span>
     </div>
+    <div id="usersList">Загрузка...</div>
+</div>
+
+<div class="debug" id="debugLog">
+    🔍 Отладка:<br>
+    Инициализация...
 </div>
 
 <script>
-    // ========== ТВОИ КЛЮЧИ ИЗ SUPABASE ==========
+    function log(msg) {
+        const debugDiv = document.getElementById('debugLog');
+        debugDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ' — ' + msg;
+        console.log(msg);
+    }
+
+    log('Скрипт запущен');
+
+    // ТВОИ ДАННЫЕ
     const SUPABASE_URL = 'https://idwsydwhvoftnthxvzfv.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_wMhIgD2JBPc2V79mW1kiTw_W7jm5poz';
-    // ===========================================
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Элементы DOM
-    const unauthSection = document.getElementById('unauth-section');
-    const authSection = document.getElementById('auth-section');
-    const userEmailSpan = document.getElementById('user-email');
-    const userIdSpan = document.getElementById('user-id');
-    const statusListDiv = document.getElementById('status-list');
-    const googleBtn = document.getElementById('google-signin-btn');
-    const logoutBtn = document.getElementById('logout-btn');
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    log('Supabase создан');
 
-    // ========== ФУНКЦИЯ ВХОДА ЧЕРЕЗ GOOGLE ==========
+    // Элементы
+    const unauthedDiv = document.getElementById('unauthed');
+    const authedDiv = document.getElementById('authed');
+    const googleBtn = document.getElementById('googleBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userEmailSpan = document.getElementById('userEmail');
+    const myUserIdSpan = document.getElementById('myUserId');
+    const usersListDiv = document.getElementById('usersList');
+    const loginErrorDiv = document.getElementById('loginError');
+
+    // Вход через Google
     async function signInWithGoogle() {
+        log('Нажата кнопка Google, начинаем вход...');
+        loginErrorDiv.style.display = 'none';
+        
         try {
-            // Получаем текущий URL для редиректа после входа
-            const redirectUrl = window.location.origin + window.location.pathname;
-            
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: redirectUrl,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    }
+                    redirectTo: window.location.href,  // возврат на эту же страницу
                 }
             });
             
-            if (error) throw error;
-            // Supabase сам выполнит редирект на Google
-            console.log('Редирект на Google OAuth...');
-        } catch (error) {
-            console.error('Ошибка при входе через Google:', error.message);
-            alert('Ошибка входа: ' + error.message);
+            if (error) {
+                log('Ошибка supabase.auth.signInWithOAuth: ' + error.message);
+                loginErrorDiv.textContent = 'Ошибка: ' + error.message;
+                loginErrorDiv.style.display = 'block';
+                throw error;
+            }
+            
+            log('signInWithOAuth вызван, редирект на Google...');
+            // Supabase сам сделает редирект
+        } catch (err) {
+            log('Исключение: ' + err.message);
+            loginErrorDiv.textContent = 'Ошибка: ' + err.message;
+            loginErrorDiv.style.display = 'block';
         }
     }
-    
-    // ========== ФУНКЦИЯ ВЫХОДА ==========
+
+    // Выход
     async function signOut() {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            console.log('Выход выполнен успешно');
-            // Обновляем UI после выхода
-            updateUIForAuthState(null);
-        } catch (error) {
-            console.error('Ошибка при выходе:', error.message);
-            alert('Ошибка выхода: ' + error.message);
-        }
+        log('Выход...');
+        await supabase.auth.signOut();
+        log('Выход выполнен');
     }
-    
-    // ========== ЗАГРУЗКА СПИСКА ПОЛЬЗОВАТЕЛЕЙ ==========
+
+    // Загрузка списка пользователей
     async function loadUsers(currentUserId) {
-        try {
-            const { data: profiles, error } = await supabase
-                .from('profiles')
-                .select('*');
-            
-            if (error) {
-                console.error('Ошибка загрузки профилей:', error);
-                statusListDiv.innerHTML = '<p class="error">Ошибка загрузки пользователей</p>';
-                return;
-            }
-            
-            if (!profiles || profiles.length === 0) {
-                statusListDiv.innerHTML = '<p>👀 Нет пользователей. Добавьте себя в таблицу profiles.</p>';
-                return;
-            }
-            
-            let html = '';
-            for (let user of profiles) {
-                const isMe = (currentUserId && user.id === currentUserId);
-                
-                let statusClass = '';
-                let statusText = user.status || 'offline';
-                if (statusText === 'online') statusClass = 'online';
-                else if (statusText === 'busy') statusClass = 'busy';
-                else statusClass = 'offline';
-                
-                if (isMe) {
-                    // Мой профиль - с выпадающим списком
-                    html += `
-                        <div class="status-item" style="background:#e8f4ff;">
-                            <div class="username">👤 ${escapeHtml(user.username)} (Вы)</div>
-                            <div>
-                                <select data-user-id="${user.id}" class="status-select">
-                                    <option value="online" ${user.status === 'online' ? 'selected' : ''}>🟢 Онлайн</option>
-                                    <option value="busy" ${user.status === 'busy' ? 'selected' : ''}>🟠 Занят</option>
-                                    <option value="offline" ${user.status === 'offline' ? 'selected' : ''}>⚫ Офлайн</option>
-                                </select>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Другие пользователи - только просмотр
-                    let statusSymbol = '';
-                    if (user.status === 'online') statusSymbol = '🟢';
-                    else if (user.status === 'busy') statusSymbol = '🟠';
-                    else statusSymbol = '⚫';
-                    
-                    html += `
-                        <div class="status-item">
-                            <div class="username">👤 ${escapeHtml(user.username)}</div>
-                            <div class="${statusClass}">${statusSymbol} ${user.status || 'offline'}</div>
-                        </div>
-                    `;
-                }
-            }
-            
-            statusListDiv.innerHTML = html;
-            
-            // Добавляем обработчики для select-ов
-            const selects = document.querySelectorAll('.status-select');
-            selects.forEach(select => {
-                select.addEventListener('change', async (e) => {
-                    const userId = select.dataset.userId;
-                    const newStatus = e.target.value;
-                    await updateStatus(userId, newStatus);
-                });
-            });
-            
-        } catch (error) {
-            console.error('Ошибка:', error);
-            statusListDiv.innerHTML = '<p class="error">Ошибка загрузки данных</p>';
+        log('Загрузка пользователей, currentUserId=' + currentUserId);
+        
+        const { data, error } = await supabase.from('profiles').select('*');
+        
+        if (error) {
+            log('Ошибка загрузки profiles: ' + error.message);
+            usersListDiv.innerHTML = '<div class="error">Ошибка: ' + error.message + '</div>';
+            return;
         }
-    }
-    
-    // ========== ОБНОВЛЕНИЕ СТАТУСА ==========
-    async function updateStatus(userId, newStatus) {
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({ status: newStatus })
-                .eq('id', userId);
+        
+        log('Загружено пользователей: ' + (data ? data.length : 0));
+        
+        if (!data || data.length === 0) {
+            usersListDiv.innerHTML = '<p>👀 Нет пользователей. Добавьте запись в таблицу profiles.</p>';
+            return;
+        }
+        
+        let html = '';
+        for (let user of data) {
+            const isMe = (currentUserId && user.id === currentUserId);
+            const statusClass = user.status || 'offline';
             
-            if (error) {
-                console.error('Ошибка обновления:', error);
-                alert('Ошибка: ' + error.message);
+            if (isMe) {
+                html += `
+                    <div class="status-item" style="background:#e0ffe0;">
+                        <span class="username">👤 ${escapeHtml(user.username)} (Вы)</span>
+                        <select id="myStatusSelect">
+                            <option value="online" ${statusClass === 'online' ? 'selected' : ''}>🟢 Онлайн</option>
+                            <option value="busy" ${statusClass === 'busy' ? 'selected' : ''}>🟠 Занят</option>
+                            <option value="offline" ${statusClass === 'offline' ? 'selected' : ''}>⚫ Офлайн</option>
+                        </select>
+                    </div>
+                `;
             } else {
-                console.log('Статус обновлён:', newStatus);
-                // Перезагружаем список, чтобы отобразить изменения
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    await loadUsers(user.id);
-                }
+                let statusText = '';
+                if (user.status === 'online') statusText = '🟢 Онлайн';
+                else if (user.status === 'busy') statusText = '🟠 Занят';
+                else statusText = '⚫ Офлайн';
+                
+                html += `
+                    <div class="status-item">
+                        <span class="username">👤 ${escapeHtml(user.username)}</span>
+                        <span class="${statusClass}">${statusText}</span>
+                    </div>
+                `;
             }
-        } catch (error) {
-            console.error('Ошибка:', error);
-            alert('Ошибка при обновлении статуса');
+        }
+        
+        usersListDiv.innerHTML = html;
+        
+        // Обработчик смены статуса
+        const selectEl = document.getElementById('myStatusSelect');
+        if (selectEl) {
+            selectEl.addEventListener('change', async (e) => {
+                const newStatus = e.target.value;
+                log('Меняем статус на ' + newStatus);
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ status: newStatus })
+                    .eq('id', currentUserId);
+                if (error) {
+                    log('Ошибка обновления: ' + error.message);
+                    alert('Ошибка: ' + error.message);
+                } else {
+                    log('Статус обновлён');
+                    loadUsers(currentUserId); // обновляем список
+                }
+            });
         }
     }
     
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -300,131 +187,102 @@
             return m;
         });
     }
-    
-    // ========== ОБНОВЛЕНИЕ UI В ЗАВИСИМОСТИ ОТ АВТОРИЗАЦИИ ==========
-    function updateUIForAuthState(user) {
-        if (user) {
-            // Пользователь авторизован
-            unauthSection.classList.add('hidden');
-            authSection.classList.remove('hidden');
-            userEmailSpan.textContent = user.email || 'Email не указан';
-            userIdSpan.textContent = user.id;
+
+    // Проверка/добавление пользователя в таблицу profiles
+    async function ensureUserInProfiles(user) {
+        log('Проверяем пользователя в profiles: ' + user.id);
+        
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
             
-            // Загружаем список пользователей с ID текущего пользователя
-            loadUsers(user.id);
+        if (error && error.code !== 'PGRST116') {
+            log('Ошибка проверки: ' + error.message);
+            return;
+        }
+        
+        if (!data) {
+            log('Пользователь не найден, добавляем...');
+            const username = user.email ? user.email.split('@')[0] : 'User_' + user.id.slice(0, 8);
+            const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({ id: user.id, username: username, status: 'online' });
+            if (insertError) {
+                log('Ошибка вставки: ' + insertError.message);
+            } else {
+                log('Пользователь добавлен: ' + username);
+            }
         } else {
-            // Пользователь не авторизован
-            unauthSection.classList.remove('hidden');
-            authSection.classList.add('hidden');
-            statusListDiv.innerHTML = '';
+            log('Пользователь уже есть в таблице');
         }
     }
-    
-    // ========== ПОДПИСКА НА ИЗМЕНЕНИЯ В РЕАЛЬНОМ ВРЕМЕНИ ==========
-    function subscribeToChanges() {
-        supabase
-            .channel('profiles-channel')
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'profiles' }, 
-                async (payload) => {
-                    console.log('Изменение в базе:', payload);
-                    // Обновляем список, если пользователь авторизован
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (user) {
-                        await loadUsers(user.id);
-                    }
-                }
-            )
-            .subscribe();
-    }
-    
-    // ========== ОБРАБОТКА СЕССИИ ПРИ ЗАГРУЗКЕ ==========
-    async function initAuth() {
-        // Получаем текущую сессию
+
+    // Обновление UI в зависимости от сессии
+    async function checkSession() {
+        log('Проверка сессии...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-            console.error('Ошибка получения сессии:', error);
+            log('Ошибка getSession: ' + error.message);
+            return;
         }
         
-        if (session?.user) {
-            updateUIForAuthState(session.user);
+        if (session && session.user) {
+            log('Сессия есть: ' + session.user.email);
+            unauthedDiv.classList.add('hidden');
+            authedDiv.classList.remove('hidden');
+            userEmailSpan.textContent = session.user.email || 'No email';
+            myUserIdSpan.textContent = session.user.id;
+            
+            await ensureUserInProfiles(session.user);
+            await loadUsers(session.user.id);
         } else {
-            updateUIForAuthState(null);
-        }
-        
-        // Подписываемся на изменения состояния авторизации
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event, session?.user?.email);
-            
-            if (event === 'SIGNED_IN' && session?.user) {
-                updateUIForAuthState(session.user);
-                // Проверяем, есть ли пользователь в таблице profiles
-                await ensureUserInProfiles(session.user);
-            } else if (event === 'SIGNED_OUT') {
-                updateUIForAuthState(null);
-            } else if (event === 'TOKEN_REFRESHED') {
-                // Просто обновляем UI, если нужно
-                if (session?.user) {
-                    updateUIForAuthState(session.user);
-                }
-            }
-        });
-        
-        // Подписываемся на изменения в таблице profiles
-        subscribeToChanges();
-    }
-    
-    // ========== ПРОВЕРКА И ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯ В ТАБЛИЦУ PROFILES ==========
-    async function ensureUserInProfiles(user) {
-        try {
-            // Проверяем, существует ли пользователь в таблице profiles
-            const { data: existingUser, error: selectError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', user.id)
-                .maybeSingle();
-            
-            if (selectError && selectError.code !== 'PGRST116') {
-                console.error('Ошибка проверки пользователя:', selectError);
-                return;
-            }
-            
-            // Если пользователь не найден, добавляем его
-            if (!existingUser) {
-                // Используем email как username (можно изменить)
-                const username = user.email ? user.email.split('@')[0] : 'User_' + user.id.slice(0, 8);
-                
-                const { error: insertError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: user.id,
-                        username: username,
-                        status: 'online'
-                    });
-                
-                if (insertError) {
-                    console.error('Ошибка добавления пользователя в profiles:', insertError);
-                } else {
-                    console.log('Пользователь добавлен в profiles:', username);
-                    // Обновляем список пользователей
-                    if (user) {
-                        await loadUsers(user.id);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Ошибка в ensureUserInProfiles:', error);
+            log('Нет сессии');
+            unauthedDiv.classList.remove('hidden');
+            authedDiv.classList.add('hidden');
         }
     }
     
-    // ========== НАВЕШИВАЕМ ОБРАБОТЧИКИ ==========
-    googleBtn.addEventListener('click', signInWithGoogle);
-    logoutBtn.addEventListener('click', signOut);
+    // Подписка на изменения авторизации
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        log('Auth state change: ' + event);
+        if (event === 'SIGNED_IN' && session) {
+            log('Пользователь вошёл: ' + session.user.email);
+            await ensureUserInProfiles(session.user);
+            unauthedDiv.classList.add('hidden');
+            authedDiv.classList.remove('hidden');
+            userEmailSpan.textContent = session.user.email;
+            myUserIdSpan.textContent = session.user.id;
+            await loadUsers(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+            log('Пользователь вышел');
+            unauthedDiv.classList.remove('hidden');
+            authedDiv.classList.add('hidden');
+        }
+    });
     
-    // ========== ЗАПУСКАЕМ ==========
-    initAuth();
+    // Подписка на изменения в таблице profiles в реальном времени
+    supabase
+        .channel('profiles-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, async () => {
+            log('Изменение в profiles, перезагружаем...');
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+                await loadUsers(session.user.id);
+            }
+        })
+        .subscribe();
     
+    // Обработчики кнопок
+    googleBtn.onclick = signInWithGoogle;
+    logoutBtn.onclick = signOut;
+    
+    // Запуск
+    checkSession();
+    
+    log('Готово. Ждём действий...');
 </script>
 
 </body>
