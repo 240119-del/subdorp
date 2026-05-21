@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduTrack — Учебный портал</title>
     <style>
-        /* ========== СВЕТЛАЯ ТЕМА ========== */
         :root {
             --bg-primary: #f5f7fb;
             --bg-secondary: #ffffff;
@@ -20,7 +19,6 @@
             --offline-color: #e74c3c;
         }
 
-        /* ========== ТЁМНАЯ ТЕМА ========== */
         body.dark {
             --bg-primary: #1a1a2e;
             --bg-secondary: #16213e;
@@ -30,449 +28,82 @@
             --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-            padding: 24px;
-            min-height: 100vh;
-        }
-
-        /* Кастомный скролл */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; padding: 24px; min-height: 100vh; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--border-color); border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 10px; }
-
-        /* Контейнеры */
-        .dashboard {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
-        .card {
-            background: var(--bg-secondary);
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.2s, background 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
-
-        .card-full {
-            grid-column: span 3;
-        }
-
-        /* Хедер */
-        .header {
-            background: var(--bg-secondary);
-            border-radius: 28px;
-            padding: 20px 28px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--card-shadow);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--accent-gradient);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .logo h1 {
-            font-size: 20px;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .user-panel {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .avatar {
-            width: 48px;
-            height: 48px;
-            background: var(--accent-gradient);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            color: white;
-        }
-
-        /* Кнопки статуса */
-        .status-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: 20px 0;
-        }
-
-        .status-btn {
-            padding: 14px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: white;
-        }
-
+        .dashboard { max-width: 1400px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .card { background: var(--bg-secondary); border-radius: 28px; padding: 24px; box-shadow: var(--card-shadow); transition: transform 0.2s, background 0.3s; }
+        .card:hover { transform: translateY(-2px); }
+        .card-full { grid-column: span 3; }
+        .header { background: var(--bg-secondary); border-radius: 28px; padding: 20px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--card-shadow); }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 48px; height: 48px; background: var(--accent-gradient); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .logo h1 { font-size: 20px; font-weight: 700; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .user-panel { display: flex; align-items: center; gap: 20px; }
+        .avatar { width: 48px; height: 48px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: white; }
+        .status-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+        .status-btn { padding: 14px; border: none; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; color: white; }
         .status-btn:active { transform: scale(0.96); }
         .btn-learn { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .btn-pause { background: linear-gradient(135deg, #f39c12, #e67e22); }
         .btn-finish { background: linear-gradient(135deg, #e74c3c, #c0392b); }
         .btn-leave { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
-
-        /* Таймер */
-        .timer-box {
-            background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1));
-            border-radius: 24px;
-            padding: 24px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .timer-value {
-            font-size: 56px;
-            font-weight: 800;
-            font-family: 'Monaco', monospace;
-            color: var(--accent-primary);
-            letter-spacing: 4px;
-        }
-
-        /* Достижения */
-        .badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 16px;
-            min-height: 100px;
-        }
-
-        .badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: var(--bg-primary);
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .badge.unlocked {
-            background: var(--accent-gradient);
-            color: white;
-            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
-        }
-
-        .badge.locked {
-            opacity: 0.5;
-        }
-
-        /* Рейтинг */
-        .rank-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .rank-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .rank-number {
-            width: 36px;
-            font-weight: 800;
-            font-size: 20px;
-        }
-
+        .timer-box { background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1)); border-radius: 24px; padding: 24px; text-align: center; margin: 20px 0; }
+        .timer-value { font-size: 56px; font-weight: 800; font-family: 'Monaco', monospace; color: var(--accent-primary); letter-spacing: 4px; }
+        .badge-list { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; min-height: 100px; }
+        .badge { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-primary); border-radius: 40px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .badge.unlocked { background: var(--accent-gradient); color: white; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
+        .badge.locked { opacity: 0.5; }
+        .rank-list { max-height: 400px; overflow-y: auto; }
+        .rank-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid var(--border-color); }
+        .rank-number { width: 36px; font-weight: 800; font-size: 20px; }
         .rank-number.gold { color: #ffd700; text-shadow: 0 0 4px rgba(255,215,0,0.5); }
         .rank-number.silver { color: #c0c0c0; }
         .rank-number.bronze { color: #cd7f32; }
-
-        .rank-avatar {
-            width: 44px;
-            height: 44px;
-            background: var(--bg-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
+        .rank-avatar { width: 44px; height: 44px; background: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
         .rank-info { flex: 1; }
         .rank-name { font-weight: 600; }
         .rank-time { font-size: 13px; font-family: monospace; color: var(--accent-primary); }
-
-        /* Монитор группы */
-        .member-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .member {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .member-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .member-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
+        .member-list { max-height: 400px; overflow-y: auto; }
+        .member { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .member-left { display: flex; align-items: center; gap: 12px; }
+        .member-dot { width: 10px; height: 10px; border-radius: 50%; }
         .member-dot.online { background: var(--online-color); box-shadow: 0 0 6px var(--online-color); }
         .member-dot.offline { background: var(--offline-color); }
-
-        /* Чат */
-        .chat-area {
-            margin-top: 20px;
-        }
-
-        .chat-window {
-            height: 280px;
-            overflow-y: auto;
-            padding: 16px;
-            background: var(--bg-primary);
-            border-radius: 20px;
-            margin-bottom: 16px;
-        }
-
-        .message {
-            margin-bottom: 12px;
-            max-width: 75%;
-        }
-
-        .message-mine {
-            margin-left: auto;
-        }
-
-        .message-bubble {
-            background: var(--bg-secondary);
-            padding: 10px 16px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        .message-mine .message-bubble {
-            background: var(--accent-gradient);
-            color: white;
-        }
-
-        .message-name {
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .chat-input-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 14px 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 30px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            outline: none;
-        }
-
-        .chat-input:focus {
-            border-color: var(--accent-primary);
-        }
-
-        .btn-send {
-            padding: 14px 28px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 30px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Кнопки действий */
-        .action-bar {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-stats {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-        }
-
-        .btn-theme {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-        }
-
-        /* Модалка */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
+        .chat-area { margin-top: 20px; }
+        .chat-window { height: 280px; overflow-y: auto; padding: 16px; background: var(--bg-primary); border-radius: 20px; margin-bottom: 16px; }
+        .message { margin-bottom: 12px; max-width: 75%; }
+        .message-mine { margin-left: auto; }
+        .message-bubble { background: var(--bg-secondary); padding: 10px 16px; border-radius: 20px; display: inline-block; }
+        .message-mine .message-bubble { background: var(--accent-gradient); color: white; }
+        .message-name { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+        .chat-input-group { display: flex; gap: 12px; }
+        .chat-input { flex: 1; padding: 14px 20px; border: 2px solid var(--border-color); border-radius: 30px; background: var(--bg-secondary); color: var(--text-primary); outline: none; }
+        .chat-input:focus { border-color: var(--accent-primary); }
+        .btn-send { padding: 14px 28px; background: var(--accent-gradient); border: none; border-radius: 30px; color: white; font-weight: 600; cursor: pointer; }
+        .action-bar { display: flex; gap: 12px; margin-top: 20px; }
+        .action-btn { flex: 1; padding: 12px; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-stats { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .btn-theme { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal.active { display: flex; }
-
-        .modal-content {
-            background: var(--bg-secondary);
-            border-radius: 32px;
-            padding: 32px;
-            max-width: 480px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
-
-        /* Логин */
-        .login-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .login-card {
-            text-align: center;
-            max-width: 400px;
-        }
-
-        .google-login {
-            width: 100%;
-            padding: 14px;
-            background: white;
-            border: 2px solid var(--border-color);
-            border-radius: 60px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 24px;
-            transition: all 0.2s;
-        }
-
-        .google-login:hover {
-            border-color: var(--accent-primary);
-            transform: scale(1.02);
-        }
-
+        .modal-content { background: var(--bg-secondary); border-radius: 32px; padding: 32px; max-width: 480px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .modal-close { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-primary); }
+        .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { text-align: center; max-width: 400px; }
+        .google-login { width: 100%; padding: 14px; background: white; border: 2px solid var(--border-color); border-radius: 60px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; transition: all 0.2s; }
+        .google-login:hover { border-color: var(--accent-primary); transform: scale(1.02); }
         .hidden { display: none; }
-
-        .logout-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            border: none;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        h3 {
-            font-size: 18px;
-            margin-bottom: 18px;
-            padding-left: 12px;
-            border-left: 4px solid var(--accent-primary);
-        }
+        .logout-btn { padding: 10px 20px; background: linear-gradient(135deg, #e74c3c, #c0392b); border: none; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; }
+        h3 { font-size: 18px; margin-bottom: 18px; padding-left: 12px; border-left: 4px solid var(--accent-primary); }
     </style>
 </head>
 <body>
 
-<!-- Логин -->
 <div id="loginScreen" class="login-wrapper">
     <div class="card login-card">
         <div class="logo-icon" style="margin: 0 auto 20px; width: 64px; height: 64px; font-size: 32px;">📚</div>
@@ -490,7 +121,6 @@
     </div>
 </div>
 
-<!-- Основное приложение -->
 <div id="mainApp" class="dashboard hidden">
     <div class="header">
         <div class="logo">
@@ -505,7 +135,6 @@
     </div>
 
     <div class="grid">
-        <!-- Колонка 1: Профиль + Таймер -->
         <div class="card">
             <h3>🎯 Твоя сессия</h3>
             <div class="status-row">
@@ -523,34 +152,23 @@
                 <button class="action-btn btn-theme" id="themeToggleBtn">🎨 Сменить тему</button>
             </div>
             <h3 style="margin-top: 20px;">🏅 Награды</h3>
-            <div class="badge-list" id="badgesContainer">
-                <div style="text-align: center; width: 100%;">Загрузка...</div>
-            </div>
+            <div class="badge-list" id="badgesContainer">Загрузка...</div>
         </div>
 
-        <!-- Колонка 2: Рейтинг -->
         <div class="card">
             <h3>📊 Топ учеников</h3>
-            <div class="rank-list" id="rankContainer">
-                <div style="text-align: center; padding: 40px;">Загрузка...</div>
-            </div>
+            <div class="rank-list" id="rankContainer">Загрузка...</div>
         </div>
 
-        <!-- Колонка 3: Монитор группы -->
         <div class="card">
             <h3>👥 В сети</h3>
-            <div class="member-list" id="membersContainer">
-                <div style="text-align: center; padding: 40px;">Загрузка...</div>
-            </div>
+            <div class="member-list" id="membersContainer">Загрузка...</div>
         </div>
 
-        <!-- Чат на всю ширину -->
         <div class="card card-full">
             <h3>💬 Обсуждения</h3>
             <div class="chat-area">
-                <div class="chat-window" id="chatContainer">
-                    <div style="text-align: center;">Загрузка...</div>
-                </div>
+                <div class="chat-window" id="chatContainer">Загрузка...</div>
                 <div class="chat-input-group">
                     <input type="text" class="chat-input" id="messageInput" placeholder="Напиши сообщение...">
                     <button class="btn-send" id="sendMessageBtn">Отправить</button>
@@ -560,7 +178,6 @@
     </div>
 </div>
 
-<!-- Модалка статистики -->
 <div id="statsModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -574,18 +191,18 @@
 <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    // ========== ТВОИ КЛЮЧИ ==========
-    const SUPABASE_URL = 'https://idwsydwhvoftnthxvzfv.supabase.c';
+    // ========== ТВОИ ПРАВИЛЬНЫЕ КЛЮЧИ ==========
+    const SUPABASE_URL = 'https://idwsydwhvoftnthxvzfv.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_wMhIgD2JBPc2V79mW1kiTw_W7jm5poz';
+    // ===========================================
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Состояние
     let currentUser = null;
     let studySeconds = 0;
     let timerInterval = null;
     let heartbeatInterval = null;
 
-    // Достижения
     const ACHIEVEMENTS = [
         { key: 'early_bird', name: 'Ранняя пташка', desc: 'Зашел до 8:00', icon: '🐦' },
         { key: 'marathoner', name: 'Марафонец', desc: '2 часа без остановки', icon: '🏃' },
@@ -594,7 +211,6 @@
         { key: 'speedy', name: 'Скоростной', desc: '3+ часа за день', icon: '⚡' }
     ];
 
-    // DOM элементы
     const loginScreen = document.getElementById('loginScreen');
     const mainApp = document.getElementById('mainApp');
     const googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -614,7 +230,6 @@
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     const statsModalContent = document.getElementById('statsModalContent');
 
-    // Утилиты
     function formatTime(sec) {
         const h = Math.floor(sec / 3600);
         const m = Math.floor((sec % 3600) / 60);
@@ -627,7 +242,6 @@
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    // Таймер
     function startTimer() {
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(async () => {
@@ -639,10 +253,7 @@
     }
 
     function stopTimer() {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     }
 
     async function saveStudyTime() {
@@ -652,10 +263,8 @@
         await loadRanking();
     }
 
-    // Статус
     async function setStatus(action) {
         if (!currentUser) return;
-        
         let statusType, statusLabel;
         switch(action) {
             case 'learn': statusType = 'study'; statusLabel = '📚 Учится'; break;
@@ -663,17 +272,14 @@
             case 'finish': statusType = 'end'; statusLabel = '🏁 Завершил'; break;
             default: statusType = 'exit'; statusLabel = '👋 Вышел';
         }
-        
         if (action === 'learn' && !timerInterval) startTimer();
         else if (action !== 'learn' && timerInterval) { stopTimer(); await saveStudyTime(); }
         if (action === 'finish') { studySeconds = 0; timerValue.textContent = formatTime(0); await saveStudyTime(); }
-        
         await supabase.from('profiles').update({ status_type: statusType, status: statusLabel, last_active: new Date().toISOString() }).eq('id', currentUser.id);
         await loadMembers();
         await loadRanking();
     }
 
-    // Достижения
     async function unlockAchievement(key) {
         if (!currentUser) return;
         const { data } = await supabase.from('user_achievements').select('*').eq('user_id', currentUser.id).eq('achievement', key).maybeSingle();
@@ -689,47 +295,26 @@
         badgesContainer.innerHTML = ACHIEVEMENTS.map(a => `<div class="badge ${unlocked.has(a.key) ? 'unlocked' : 'locked'}" title="${a.desc}">${a.icon} ${a.name}</div>`).join('');
     }
 
-    // Рейтинг
     async function loadRanking() {
         const { data } = await supabase.from('profiles').select('id, username, study_seconds').order('study_seconds', { ascending: false }).limit(10);
         if (!data) return;
         rankContainer.innerHTML = data.map((u, i) => {
-            let rankClass = '';
-            if (i === 0) rankClass = 'gold';
-            else if (i === 1) rankClass = 'silver';
-            else if (i === 2) rankClass = 'bronze';
-            return `<div class="rank-item">
-                <div class="rank-number ${rankClass}">${i+1}</div>
-                <div class="rank-avatar">${(u.username || 'U')[0].toUpperCase()}</div>
-                <div class="rank-info"><div class="rank-name">${escapeHtml(u.username)} ${u.id === currentUser?.id ? '✓' : ''}</div></div>
-                <div class="rank-time">${Math.floor(u.study_seconds/3600)}ч ${Math.floor((u.study_seconds%3600)/60)}м</div>
-            </div>`;
+            let rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            return `<div class="rank-item"><div class="rank-number ${rankClass}">${i+1}</div><div class="rank-avatar">${(u.username || 'U')[0].toUpperCase()}</div><div class="rank-info"><div class="rank-name">${escapeHtml(u.username)} ${u.id === currentUser?.id ? '✓' : ''}</div></div><div class="rank-time">${Math.floor(u.study_seconds/3600)}ч ${Math.floor((u.study_seconds%3600)/60)}м</div></div>`;
         }).join('');
     }
 
-    // Монитор группы
     async function loadMembers() {
         const { data } = await supabase.from('profiles').select('*').order('username');
         if (!data) return;
         const now = new Date();
         membersContainer.innerHTML = data.map(u => {
             const isOnline = u.status_type !== 'exit' && u.last_active && new Date(u.last_active) > new Date(now - 60000);
-            let statusIcon = '';
-            if (u.status_type === 'study') statusIcon = '📚';
-            else if (u.status_type === 'break') statusIcon = '☕';
-            else if (u.status_type === 'end') statusIcon = '🏁';
-            else statusIcon = '💤';
-            return `<div class="member">
-                <div class="member-left">
-                    <div class="member-dot ${isOnline ? 'online' : 'offline'}"></div>
-                    <div><b>${escapeHtml(u.username)}</b><br><span style="font-size: 11px;">${statusIcon} ${u.status || '—'}</span></div>
-                </div>
-                <div>${Math.floor(u.study_seconds/3600)}ч</div>
-            </div>`;
+            let statusIcon = u.status_type === 'study' ? '📚' : u.status_type === 'break' ? '☕' : u.status_type === 'end' ? '🏁' : '💤';
+            return `<div class="member"><div class="member-left"><div class="member-dot ${isOnline ? 'online' : 'offline'}"></div><div><b>${escapeHtml(u.username)}</b><br><span style="font-size: 11px;">${statusIcon} ${u.status || '—'}</span></div></div><div>${Math.floor(u.study_seconds/3600)}ч</div></div>`;
         }).join('');
     }
 
-    // Чат
     async function sendMessage() {
         const msg = messageInput.value.trim();
         if (!msg || !currentUser) return;
@@ -746,33 +331,19 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // Статистика
     async function showStats() {
         if (!currentUser) return;
         const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
         const { data: achievements } = await supabase.from('user_achievements').select('achievement').eq('user_id', currentUser.id);
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-        const hours = Math.floor((profile?.study_seconds || 0) / 3600);
-        const mins = Math.floor(((profile?.study_seconds || 0) % 3600) / 60);
-        statsModalContent.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div><strong>👤 Имя:</strong> ${escapeHtml(profile?.username)}</div>
-                <div><strong>📧 Email:</strong> ${escapeHtml(profile?.email)}</div>
-                <div><strong>⏱ Время учёбы:</strong> ${hours}ч ${mins}м</div>
-                <div><strong>💬 Сообщений:</strong> ${msgCount || 0}</div>
-                <div><strong>🏆 Достижений:</strong> ${achievements?.length || 0}/${ACHIEVEMENTS.length}</div>
-                <div><strong>🟢 Статус:</strong> ${profile?.status || '—'}</div>
-            </div>
-        `;
+        statsModalContent.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px;"><div><strong>👤 Имя:</strong> ${escapeHtml(profile?.username)}</div><div><strong>📧 Email:</strong> ${escapeHtml(profile?.email)}</div><div><strong>⏱ Время учёбы:</strong> ${Math.floor((profile?.study_seconds||0)/3600)}ч ${Math.floor(((profile?.study_seconds||0)%3600)/60)}м</div><div><strong>💬 Сообщений:</strong> ${msgCount || 0}</div><div><strong>🏆 Достижений:</strong> ${achievements?.length || 0}/${ACHIEVEMENTS.length}</div><div><strong>🟢 Статус:</strong> ${profile?.status || '—'}</div></div>`;
         statsModal.classList.add('active');
     }
 
-    // Хартбит
     async function updateHeartbeat() {
         if (currentUser) await supabase.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', currentUser.id);
     }
 
-    // Тема
     function toggleTheme() {
         document.body.classList.toggle('dark');
         localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
@@ -782,7 +353,6 @@
         if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
     }
 
-    // Realtime
     function setupRealtime() {
         const channel = supabase.channel('realtime');
         channel.on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => { loadMembers(); loadRanking(); });
@@ -791,19 +361,10 @@
         channel.subscribe();
     }
 
-    // Профиль
     async function syncProfile(user) {
         const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         if (!data) {
-            await supabase.from('profiles').insert({
-                id: user.id,
-                username: user.user_metadata?.full_name || user.email?.split('@')[0],
-                email: user.email,
-                status_type: 'exit',
-                status: '👋 Вышел',
-                study_seconds: 0,
-                last_active: new Date().toISOString()
-            });
+            await supabase.from('profiles').insert({ id: user.id, username: user.user_metadata?.full_name || user.email?.split('@')[0], email: user.email, status_type: 'exit', status: '👋 Вышел', study_seconds: 0, last_active: new Date().toISOString() });
             studySeconds = 0;
         } else {
             studySeconds = data.study_seconds || 0;
@@ -814,16 +375,8 @@
         await loadBadges();
     }
 
-    // Авторизация
-    async function login() {
-        await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
-    }
-
-    async function logout() {
-        if (timerInterval) clearInterval(timerInterval);
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
-        await supabase.auth.signOut();
-    }
+    async function login() { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } }); }
+    async function logout() { if (timerInterval) clearInterval(timerInterval); if (heartbeatInterval) clearInterval(heartbeatInterval); await supabase.auth.signOut(); }
 
     async function onAuth(user) {
         if (user) {
@@ -831,10 +384,7 @@
             await syncProfile(user);
             userNameHeader.textContent = user.user_metadata?.full_name || user.email;
             userAvatar.textContent = (user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase();
-            await loadMembers();
-            await loadMessages();
-            await loadRanking();
-            await loadBadges();
+            await loadMembers(); await loadMessages(); await loadRanking(); await loadBadges();
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             heartbeatInterval = setInterval(updateHeartbeat, 30000);
             setupRealtime();
@@ -847,7 +397,6 @@
         }
     }
 
-    // Обработчики
     googleLoginBtn?.addEventListener('click', login);
     logoutMainBtn?.addEventListener('click', logout);
     sendMessageBtn?.addEventListener('click', sendMessage);
@@ -856,16 +405,9 @@
     themeToggleBtn?.addEventListener('click', toggleTheme);
     closeStatsBtn?.addEventListener('click', () => statsModal.classList.remove('active'));
     statsModal?.addEventListener('click', e => { if (e.target === statsModal) statsModal.classList.remove('active'); });
-    
-    document.querySelectorAll('[data-action]').forEach(btn => {
-        btn.addEventListener('click', () => setStatus(btn.dataset.action));
-    });
+    document.querySelectorAll('[data-action]').forEach(btn => btn.addEventListener('click', () => setStatus(btn.dataset.action)));
 
-    supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN') onAuth(session?.user);
-        else if (event === 'SIGNED_OUT') onAuth(null);
-    });
-
+    supabase.auth.onAuthStateChange((event, session) => { if (event === 'SIGNED_IN') onAuth(session?.user); else if (event === 'SIGNED_OUT') onAuth(null); });
     supabase.auth.getSession().then(({ data: { session } }) => onAuth(session?.user));
     loadTheme();
 </script>
