@@ -1,1 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Монитор статусов — Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .status-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .username {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        select {
+            padding: 6px 12px;
+            font-size: 1em;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .status-online {
+            color: green;
+            font-weight: bold;
+        }
+        .status-offline {
+            color: gray;
+        }
+        .status-busy {
+            color: orange;
+        }
+        .my-id {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        button {
+            background: #2c7da0;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1f5e7a;
+        }
+    </style>
+</head>
+<body>
 
+<h1>📊 Монитор статусов</h1>
+
+<div class="my-id" id="myIdDisplay">
+    ⚠️ Загрузка вашего ID...
+</div>
+
+<div class="status-list" id="statusList">
+    <p>Загрузка пользователей...</p>
+</div>
+
+<script>
+    // 🔐 ВАШИ ДАННЫЕ ИЗ SUPABASE
+    const SUPABASE_URL = 'https://idwsydwhvoftnthxvzfv.supabase.co';  // ваш URL
+    const SUPABASE_ANON_KEY = 'sb_publishable_wMhIgD2JBPc2V79mW1kiTw_W7jm5poz';  // ваш публичный ключ
+    
+    // ВАШ UUID ИЗ ТАБЛИЦЫ profiles
+    const MY_USER_ID = 'b54c95bd-e46f-470f-9924-57471e6b134a';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Показать свой ID на странице
+    document.getElementById('myIdDisplay').innerHTML = `🆔 Ваш ID: <strong>${MY_USER_ID}</strong><br>
+    <span style="font-size:0.85rem;">✅ Вы можете менять свой статус (обновление разрешено через RLS)</span>`;
+
+    // Функция загрузки и отображения всех профилей
+    async function loadProfiles() {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*');
+
+        if (error) {
+            console.error('Ошибка загрузки:', error);
+            document.getElementById('statusList').innerHTML = '<p style="color:red">❌ Ошибка загрузки данных. Проверьте RLS и ключи.</p>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            document.getElementById('statusList').innerHTML = '<p>👀 Пользователей пока нет. Добавьте себя через SQL-редактор.</p>';
+            return;
+        }
+
+        // Рендерим список пользователей
+        let html = '';
+        for (let user of data) {
+            const statusClass = 
+                user.status === 'online' ? 'status-online' : 
+                (user.status === 'busy' ? 'status-busy' : 'status-offline');
+            
+            const statusText = 
+                user.status === 'online' ? '🟢 Онлайн' : 
+                (user.status === 'busy' ? '🟠 Занят' : '⚫ Офлайн');
+
+            // Если это текущий пользователь — показываем select для изменения статуса
+            if (user.id === MY_USER_ID) {
+                html += `
+                    <div class="status-item" style="background:#eef7ff;">
+                        <div>
+                            <span class="username">👤 ${user.username} (Вы)</span>
+                        </div>
+                        <div>
+                            <select id="statusSelect" data-user-id="${user.id}">
+                                <option value="online" ${user.status === 'online' ? 'selected' : ''}>🟢 Онлайн</option>
+                                <option value="busy" ${user.status === 'busy' ? 'selected' : ''}>🟠 Занят</option>
+                                <option value="offline" ${user.status === 'offline' ? 'selected' : ''}>⚫ Офлайн</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="status-item">
+                        <div>
+                            <span class="username">👤 ${user.username}</span>
+                        </div>
+                        <div class="${statusClass}">${statusText}</div>
+                    </div>
+                `;
+            }
+        }
+        document.getElementById('statusList').innerHTML = html;
+
+        // Добавляем обработчик для select (только для своего профиля)
+        const selectElem = document.getElementById('statusSelect');
+        if (selectElem) {
+            selectElem.addEventListener('change', async (e) => {
+                const newStatus = e.target.value;
+                await updateStatus(MY_USER_ID, newStatus);
+            });
+        }
+    }
+
+    // Функция обновления статуса (UPDATE)
+    async function updateStatus(userId, newStatus) {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ status: newStatus })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Ошибка обновления:', error);
+            alert('❌ Не удалось обновить статус. Проверьте RLS политику для UPDATE.');
+        } else {
+            console.log('✅ Статус обновлён:', newStatus);
+            loadProfiles();
+        }
+    }
+
+    // 🌟 ПОДПИСКА НА ИЗМЕНЕНИЯ В РЕАЛЬНОМ ВРЕМЕНИ
+    supabase
+        .channel('profiles-changes')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'profiles' },
+            (payload) => {
+                console.log('Изменение в базе:', payload);
+                loadProfiles();
+            }
+        )
+        .subscribe();
+
+    // Загружаем профили при старте
+    loadProfiles();
+</script>
+
+</body>
+</html>
