@@ -2,288 +2,872 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Монитор статусов</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack — Учебный портал</title>
     <style>
-        body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; }
-        button { background: #4285f4; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; }
-        .user-info { background: #e8f0fe; padding: 15px; border-radius: 8px; margin: 15px 0; display: flex; justify-content: space-between; }
-        .status-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ccc; }
-        select { padding: 5px 10px; border-radius: 20px; }
-        .online { color: green; }
-        .offline { color: gray; }
-        .busy { color: orange; }
+        /* ========== СВЕТЛАЯ ТЕМА ========== */
+        :root {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --accent-primary: #ff6b35;
+            --accent-secondary: #f7931e;
+            --accent-gradient: linear-gradient(135deg, #ff6b35, #f7931e);
+            --border-color: #e9ecef;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --online-color: #2ecc71;
+            --offline-color: #e74c3c;
+        }
+
+        /* ========== ТЁМНАЯ ТЕМА ========== */
+        body.dark {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text-primary: #ecf0f1;
+            --text-secondary: #bdc3c7;
+            --border-color: #2c3e50;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* Кастомный скролл */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--border-color); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 10px; }
+
+        /* Контейнеры */
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-full {
+            grid-column: span 3;
+        }
+
+        /* Хедер */
+        .header {
+            background: var(--bg-secondary);
+            border-radius: 28px;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+        }
+
+        /* Кнопки статуса */
+        .status-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .status-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .status-btn:active { transform: scale(0.96); }
+        .btn-learn { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-pause { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-finish { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-leave { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+
+        /* Таймер */
+        .timer-box {
+            background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1));
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .timer-value {
+            font-size: 56px;
+            font-weight: 800;
+            font-family: 'Monaco', monospace;
+            color: var(--accent-primary);
+            letter-spacing: 4px;
+        }
+
+        /* Достижения */
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            min-height: 100px;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .badge.unlocked {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+        }
+
+        .badge.locked {
+            opacity: 0.5;
+        }
+
+        /* Рейтинг */
+        .rank-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .rank-number {
+            width: 36px;
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .rank-number.gold { color: #ffd700; text-shadow: 0 0 4px rgba(255,215,0,0.5); }
+        .rank-number.silver { color: #c0c0c0; }
+        .rank-number.bronze { color: #cd7f32; }
+
+        .rank-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-weight: 600; }
+        .rank-time { font-size: 13px; font-family: monospace; color: var(--accent-primary); }
+
+        /* Монитор группы */
+        .member-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .member {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .member-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .member-dot.online { background: var(--online-color); box-shadow: 0 0 6px var(--online-color); }
+        .member-dot.offline { background: var(--offline-color); }
+
+        /* Чат */
+        .chat-area {
+            margin-top: 20px;
+        }
+
+        .chat-window {
+            height: 280px;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            max-width: 75%;
+        }
+
+        .message-mine {
+            margin-left: auto;
+        }
+
+        .message-bubble {
+            background: var(--bg-secondary);
+            padding: 10px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .message-mine .message-bubble {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .message-name {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .btn-send {
+            padding: 14px 28px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Кнопки действий */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-stats {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-theme {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        /* Модалка */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 32px;
+            padding: 32px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        /* Логин */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .google-login {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            transition: all 0.2s;
+        }
+
+        .google-login:hover {
+            border-color: var(--accent-primary);
+            transform: scale(1.02);
+        }
+
         .hidden { display: none; }
-        .error { color: red; background: #ffe0e0; padding: 10px; border-radius: 8px; }
-        .debug { background: #f4f4f4; padding: 10px; font-size: 11px; margin-top: 20px; border-radius: 5px; word-break: break-all; }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        h3 {
+            font-size: 18px;
+            margin-bottom: 18px;
+            padding-left: 12px;
+            border-left: 4px solid var(--accent-primary);
+        }
     </style>
 </head>
 <body>
 
-<h1>📊 Монитор статусов</h1>
-
-<div id="unauthed">
-    <button id="googleBtn">🔐 Войти через Google</button>
-    <p id="loginError" class="error" style="display:none;"></p>
-</div>
-
-<div id="authed" class="hidden">
-    <div class="user-info">
-        <span id="userEmail"></span>
-        <button id="logoutBtn">Выйти</button>
+<!-- Логин -->
+<div id="loginScreen" class="login-wrapper">
+    <div class="card login-card">
+        <div class="logo-icon" style="margin: 0 auto 20px; width: 64px; height: 64px; font-size: 32px;">📚</div>
+        <h2 style="margin-bottom: 12px;">EduTrack</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Твой учебный помощник</p>
+        <button id="googleLoginBtn" class="google-login">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Войти через Google
+        </button>
     </div>
-    <div id="myIdBlock" style="background:#f0f0f0; padding:8px; border-radius:5px; margin:10px 0; font-size:12px;">
-        <strong>Ваш ID:</strong> <span id="myUserId"></span>
+</div>
+
+<!-- Основное приложение -->
+<div id="mainApp" class="dashboard hidden">
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">🎯</div>
+            <h1>EduTrack</h1>
+        </div>
+        <div class="user-panel">
+            <span id="userNameHeader" style="font-weight: 500;">Загрузка...</span>
+            <div class="avatar" id="userAvatar">A</div>
+            <button id="logoutMainBtn" class="logout-btn">Выйти</button>
+        </div>
     </div>
-    <div id="usersList">Загрузка...</div>
+
+    <div class="grid">
+        <!-- Колонка 1: Профиль + Таймер -->
+        <div class="card">
+            <h3>🎯 Твоя сессия</h3>
+            <div class="status-row">
+                <button class="status-btn btn-learn" data-action="learn">📖 Учиться</button>
+                <button class="status-btn btn-pause" data-action="pause">☕ Отдых</button>
+                <button class="status-btn btn-finish" data-action="finish">🏁 Финиш</button>
+                <button class="status-btn btn-leave" data-action="leave">👋 Уйти</button>
+            </div>
+            <div class="timer-box">
+                <div class="timer-value" id="timerValue">00:00:00</div>
+                <div style="font-size: 13px; margin-top: 8px;">время в фокусе</div>
+            </div>
+            <div class="action-bar">
+                <button class="action-btn btn-stats" id="statsModalBtn">📊 Моя статистика</button>
+                <button class="action-btn btn-theme" id="themeToggleBtn">🎨 Сменить тему</button>
+            </div>
+            <h3 style="margin-top: 20px;">🏅 Награды</h3>
+            <div class="badge-list" id="badgesContainer">
+                <div style="text-align: center; width: 100%;">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Колонка 2: Рейтинг -->
+        <div class="card">
+            <h3>📊 Топ учеников</h3>
+            <div class="rank-list" id="rankContainer">
+                <div style="text-align: center; padding: 40px;">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Колонка 3: Монитор группы -->
+        <div class="card">
+            <h3>👥 В сети</h3>
+            <div class="member-list" id="membersContainer">
+                <div style="text-align: center; padding: 40px;">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Чат на всю ширину -->
+        <div class="card card-full">
+            <h3>💬 Обсуждения</h3>
+            <div class="chat-area">
+                <div class="chat-window" id="chatContainer">
+                    <div style="text-align: center;">Загрузка...</div>
+                </div>
+                <div class="chat-input-group">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Напиши сообщение...">
+                    <button class="btn-send" id="sendMessageBtn">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="debug" id="debugLog">
-    🔍 Отладка:<br>
-    Инициализация...
+<!-- Модалка статистики -->
+<div id="statsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📊 Твоя статистика</h3>
+            <button class="modal-close" id="closeStatsBtn">&times;</button>
+        </div>
+        <div id="statsModalContent">Загрузка...</div>
+    </div>
 </div>
 
-<script>
-    function log(msg) {
-        const debugDiv = document.getElementById('debugLog');
-        debugDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ' — ' + msg;
-        console.log(msg);
+<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    // ========== ТВОИ КЛЮЧИ ==========
+    const SUPABASE_URL = 'https://dsbllavkdvjrclihfbwv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_jMtOL78wL9cxkMDOTi40pg_Gqco-1zy';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Состояние
+    let currentUser = null;
+    let studySeconds = 0;
+    let timerInterval = null;
+    let heartbeatInterval = null;
+
+    // Достижения
+    const ACHIEVEMENTS = [
+        { key: 'early_bird', name: 'Ранняя пташка', desc: 'Зашел до 8:00', icon: '🐦' },
+        { key: 'marathoner', name: 'Марафонец', desc: '2 часа без остановки', icon: '🏃' },
+        { key: 'activist', name: 'Активист', desc: '20 сообщений в чате', icon: '🎙️' },
+        { key: 'hardworker', name: 'Трудяга', desc: '10+ часов всего', icon: '💪' },
+        { key: 'speedy', name: 'Скоростной', desc: '3+ часа за день', icon: '⚡' }
+    ];
+
+    // DOM элементы
+    const loginScreen = document.getElementById('loginScreen');
+    const mainApp = document.getElementById('mainApp');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const logoutMainBtn = document.getElementById('logoutMainBtn');
+    const userNameHeader = document.getElementById('userNameHeader');
+    const userAvatar = document.getElementById('userAvatar');
+    const timerValue = document.getElementById('timerValue');
+    const badgesContainer = document.getElementById('badgesContainer');
+    const rankContainer = document.getElementById('rankContainer');
+    const membersContainer = document.getElementById('membersContainer');
+    const chatContainer = document.getElementById('chatContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const statsModalBtn = document.getElementById('statsModalBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const statsModal = document.getElementById('statsModal');
+    const closeStatsBtn = document.getElementById('closeStatsBtn');
+    const statsModalContent = document.getElementById('statsModalContent');
+
+    // Утилиты
+    function formatTime(sec) {
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
-    log('Скрипт запущен');
-
-    // ТВОИ ДАННЫЕ
-    const SUPABASE_URL = 'https://idwsydwhvoftnthxvzfv.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_wMhIgD2JBPc2V79mW1kiTw_W7jm5poz';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    log('Supabase создан');
-
-    // Элементы
-    const unauthedDiv = document.getElementById('unauthed');
-    const authedDiv = document.getElementById('authed');
-    const googleBtn = document.getElementById('googleBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userEmailSpan = document.getElementById('userEmail');
-    const myUserIdSpan = document.getElementById('myUserId');
-    const usersListDiv = document.getElementById('usersList');
-    const loginErrorDiv = document.getElementById('loginError');
-
-    // Вход через Google
-    async function signInWithGoogle() {
-        log('Нажата кнопка Google, начинаем вход...');
-        loginErrorDiv.style.display = 'none';
-        
-        try {
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.href,  // возврат на эту же страницу
-                }
-            });
-            
-            if (error) {
-                log('Ошибка supabase.auth.signInWithOAuth: ' + error.message);
-                loginErrorDiv.textContent = 'Ошибка: ' + error.message;
-                loginErrorDiv.style.display = 'block';
-                throw error;
-            }
-            
-            log('signInWithOAuth вызван, редирект на Google...');
-            // Supabase сам сделает редирект
-        } catch (err) {
-            log('Исключение: ' + err.message);
-            loginErrorDiv.textContent = 'Ошибка: ' + err.message;
-            loginErrorDiv.style.display = 'block';
-        }
-    }
-
-    // Выход
-    async function signOut() {
-        log('Выход...');
-        await supabase.auth.signOut();
-        log('Выход выполнен');
-    }
-
-    // Загрузка списка пользователей
-    async function loadUsers(currentUserId) {
-        log('Загрузка пользователей, currentUserId=' + currentUserId);
-        
-        const { data, error } = await supabase.from('profiles').select('*');
-        
-        if (error) {
-            log('Ошибка загрузки profiles: ' + error.message);
-            usersListDiv.innerHTML = '<div class="error">Ошибка: ' + error.message + '</div>';
-            return;
-        }
-        
-        log('Загружено пользователей: ' + (data ? data.length : 0));
-        
-        if (!data || data.length === 0) {
-            usersListDiv.innerHTML = '<p>👀 Нет пользователей. Добавьте запись в таблицу profiles.</p>';
-            return;
-        }
-        
-        let html = '';
-        for (let user of data) {
-            const isMe = (currentUserId && user.id === currentUserId);
-            const statusClass = user.status || 'offline';
-            
-            if (isMe) {
-                html += `
-                    <div class="status-item" style="background:#e0ffe0;">
-                        <span class="username">👤 ${escapeHtml(user.username)} (Вы)</span>
-                        <select id="myStatusSelect">
-                            <option value="online" ${statusClass === 'online' ? 'selected' : ''}>🟢 Онлайн</option>
-                            <option value="busy" ${statusClass === 'busy' ? 'selected' : ''}>🟠 Занят</option>
-                            <option value="offline" ${statusClass === 'offline' ? 'selected' : ''}>⚫ Офлайн</option>
-                        </select>
-                    </div>
-                `;
-            } else {
-                let statusText = '';
-                if (user.status === 'online') statusText = '🟢 Онлайн';
-                else if (user.status === 'busy') statusText = '🟠 Занят';
-                else statusText = '⚫ Офлайн';
-                
-                html += `
-                    <div class="status-item">
-                        <span class="username">👤 ${escapeHtml(user.username)}</span>
-                        <span class="${statusClass}">${statusText}</span>
-                    </div>
-                `;
-            }
-        }
-        
-        usersListDiv.innerHTML = html;
-        
-        // Обработчик смены статуса
-        const selectEl = document.getElementById('myStatusSelect');
-        if (selectEl) {
-            selectEl.addEventListener('change', async (e) => {
-                const newStatus = e.target.value;
-                log('Меняем статус на ' + newStatus);
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({ status: newStatus })
-                    .eq('id', currentUserId);
-                if (error) {
-                    log('Ошибка обновления: ' + error.message);
-                    alert('Ошибка: ' + error.message);
-                } else {
-                    log('Статус обновлён');
-                    loadUsers(currentUserId); // обновляем список
-                }
-            });
-        }
-    }
-    
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    // Проверка/добавление пользователя в таблицу profiles
-    async function ensureUserInProfiles(user) {
-        log('Проверяем пользователя в profiles: ' + user.id);
+    // Таймер
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(async () => {
+            studySeconds++;
+            timerValue.textContent = formatTime(studySeconds);
+            if (studySeconds % 30 === 0) await saveStudyTime();
+            if (studySeconds >= 7200) await unlockAchievement('marathoner');
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    async function saveStudyTime() {
+        if (!currentUser) return;
+        await supabase.from('profiles').update({ study_seconds: studySeconds }).eq('id', currentUser.id);
+        if (studySeconds >= 36000) await unlockAchievement('hardworker');
+        await loadRanking();
+    }
+
+    // Статус
+    async function setStatus(action) {
+        if (!currentUser) return;
         
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-        if (error && error.code !== 'PGRST116') {
-            log('Ошибка проверки: ' + error.message);
-            return;
+        let statusType, statusLabel;
+        switch(action) {
+            case 'learn': statusType = 'study'; statusLabel = '📚 Учится'; break;
+            case 'pause': statusType = 'break'; statusLabel = '☕ Отдыхает'; break;
+            case 'finish': statusType = 'end'; statusLabel = '🏁 Завершил'; break;
+            default: statusType = 'exit'; statusLabel = '👋 Вышел';
         }
         
+        if (action === 'learn' && !timerInterval) startTimer();
+        else if (action !== 'learn' && timerInterval) { stopTimer(); await saveStudyTime(); }
+        if (action === 'finish') { studySeconds = 0; timerValue.textContent = formatTime(0); await saveStudyTime(); }
+        
+        await supabase.from('profiles').update({ status_type: statusType, status: statusLabel, last_active: new Date().toISOString() }).eq('id', currentUser.id);
+        await loadMembers();
+        await loadRanking();
+    }
+
+    // Достижения
+    async function unlockAchievement(key) {
+        if (!currentUser) return;
+        const { data } = await supabase.from('user_achievements').select('*').eq('user_id', currentUser.id).eq('achievement', key).maybeSingle();
+        if (data) return;
+        await supabase.from('user_achievements').insert({ user_id: currentUser.id, achievement: key });
+        await loadBadges();
+    }
+
+    async function loadBadges() {
+        if (!currentUser) return;
+        const { data } = await supabase.from('user_achievements').select('achievement').eq('user_id', currentUser.id);
+        const unlocked = new Set(data?.map(a => a.achievement) || []);
+        badgesContainer.innerHTML = ACHIEVEMENTS.map(a => `<div class="badge ${unlocked.has(a.key) ? 'unlocked' : 'locked'}" title="${a.desc}">${a.icon} ${a.name}</div>`).join('');
+    }
+
+    // Рейтинг
+    async function loadRanking() {
+        const { data } = await supabase.from('profiles').select('id, username, study_seconds').order('study_seconds', { ascending: false }).limit(10);
+        if (!data) return;
+        rankContainer.innerHTML = data.map((u, i) => {
+            let rankClass = '';
+            if (i === 0) rankClass = 'gold';
+            else if (i === 1) rankClass = 'silver';
+            else if (i === 2) rankClass = 'bronze';
+            return `<div class="rank-item">
+                <div class="rank-number ${rankClass}">${i+1}</div>
+                <div class="rank-avatar">${(u.username || 'U')[0].toUpperCase()}</div>
+                <div class="rank-info"><div class="rank-name">${escapeHtml(u.username)} ${u.id === currentUser?.id ? '✓' : ''}</div></div>
+                <div class="rank-time">${Math.floor(u.study_seconds/3600)}ч ${Math.floor((u.study_seconds%3600)/60)}м</div>
+            </div>`;
+        }).join('');
+    }
+
+    // Монитор группы
+    async function loadMembers() {
+        const { data } = await supabase.from('profiles').select('*').order('username');
+        if (!data) return;
+        const now = new Date();
+        membersContainer.innerHTML = data.map(u => {
+            const isOnline = u.status_type !== 'exit' && u.last_active && new Date(u.last_active) > new Date(now - 60000);
+            let statusIcon = '';
+            if (u.status_type === 'study') statusIcon = '📚';
+            else if (u.status_type === 'break') statusIcon = '☕';
+            else if (u.status_type === 'end') statusIcon = '🏁';
+            else statusIcon = '💤';
+            return `<div class="member">
+                <div class="member-left">
+                    <div class="member-dot ${isOnline ? 'online' : 'offline'}"></div>
+                    <div><b>${escapeHtml(u.username)}</b><br><span style="font-size: 11px;">${statusIcon} ${u.status || '—'}</span></div>
+                </div>
+                <div>${Math.floor(u.study_seconds/3600)}ч</div>
+            </div>`;
+        }).join('');
+    }
+
+    // Чат
+    async function sendMessage() {
+        const msg = messageInput.value.trim();
+        if (!msg || !currentUser) return;
+        await supabase.from('messages').insert({ user_id: currentUser.id, username: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0], message: msg });
+        messageInput.value = '';
+        const { count } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+        if (count >= 20) await unlockAchievement('activist');
+    }
+
+    async function loadMessages() {
+        const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: true }).limit(50);
+        if (!data || !data.length) { chatContainer.innerHTML = '<div style="text-align: center;">💬 Нет сообщений</div>'; return; }
+        chatContainer.innerHTML = data.map(m => `<div class="message ${m.user_id === currentUser?.id ? 'message-mine' : ''}"><div class="message-bubble"><div class="message-name">${escapeHtml(m.username)}</div>${escapeHtml(m.message)}</div></div>`).join('');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Статистика
+    async function showStats() {
+        if (!currentUser) return;
+        const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+        const { data: achievements } = await supabase.from('user_achievements').select('achievement').eq('user_id', currentUser.id);
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+        const hours = Math.floor((profile?.study_seconds || 0) / 3600);
+        const mins = Math.floor(((profile?.study_seconds || 0) % 3600) / 60);
+        statsModalContent.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div><strong>👤 Имя:</strong> ${escapeHtml(profile?.username)}</div>
+                <div><strong>📧 Email:</strong> ${escapeHtml(profile?.email)}</div>
+                <div><strong>⏱ Время учёбы:</strong> ${hours}ч ${mins}м</div>
+                <div><strong>💬 Сообщений:</strong> ${msgCount || 0}</div>
+                <div><strong>🏆 Достижений:</strong> ${achievements?.length || 0}/${ACHIEVEMENTS.length}</div>
+                <div><strong>🟢 Статус:</strong> ${profile?.status || '—'}</div>
+            </div>
+        `;
+        statsModal.classList.add('active');
+    }
+
+    // Хартбит
+    async function updateHeartbeat() {
+        if (currentUser) await supabase.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', currentUser.id);
+    }
+
+    // Тема
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    function loadTheme() {
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    }
+
+    // Realtime
+    function setupRealtime() {
+        const channel = supabase.channel('realtime');
+        channel.on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => { loadMembers(); loadRanking(); });
+        channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => loadMessages());
+        channel.on('postgres_changes', { event: '*', schema: 'public', table: 'user_achievements' }, () => loadBadges());
+        channel.subscribe();
+    }
+
+    // Профиль
+    async function syncProfile(user) {
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         if (!data) {
-            log('Пользователь не найден, добавляем...');
-            const username = user.email ? user.email.split('@')[0] : 'User_' + user.id.slice(0, 8);
-            const { error: insertError } = await supabase
-                .from('profiles')
-                .insert({ id: user.id, username: username, status: 'online' });
-            if (insertError) {
-                log('Ошибка вставки: ' + insertError.message);
-            } else {
-                log('Пользователь добавлен: ' + username);
-            }
+            await supabase.from('profiles').insert({
+                id: user.id,
+                username: user.user_metadata?.full_name || user.email?.split('@')[0],
+                email: user.email,
+                status_type: 'exit',
+                status: '👋 Вышел',
+                study_seconds: 0,
+                last_active: new Date().toISOString()
+            });
+            studySeconds = 0;
         } else {
-            log('Пользователь уже есть в таблице');
+            studySeconds = data.study_seconds || 0;
+            timerValue.textContent = formatTime(studySeconds);
+            if (data.status_type === 'study') startTimer();
+        }
+        if (new Date().getHours() < 8) await unlockAchievement('early_bird');
+        await loadBadges();
+    }
+
+    // Авторизация
+    async function login() {
+        await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+    }
+
+    async function logout() {
+        if (timerInterval) clearInterval(timerInterval);
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        await supabase.auth.signOut();
+    }
+
+    async function onAuth(user) {
+        if (user) {
+            currentUser = user;
+            await syncProfile(user);
+            userNameHeader.textContent = user.user_metadata?.full_name || user.email;
+            userAvatar.textContent = (user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase();
+            await loadMembers();
+            await loadMessages();
+            await loadRanking();
+            await loadBadges();
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            heartbeatInterval = setInterval(updateHeartbeat, 30000);
+            setupRealtime();
+            loginScreen.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+        } else {
+            currentUser = null;
+            loginScreen.classList.remove('hidden');
+            mainApp.classList.add('hidden');
         }
     }
 
-    // Обновление UI в зависимости от сессии
-    async function checkSession() {
-        log('Проверка сессии...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-            log('Ошибка getSession: ' + error.message);
-            return;
-        }
-        
-        if (session && session.user) {
-            log('Сессия есть: ' + session.user.email);
-            unauthedDiv.classList.add('hidden');
-            authedDiv.classList.remove('hidden');
-            userEmailSpan.textContent = session.user.email || 'No email';
-            myUserIdSpan.textContent = session.user.id;
-            
-            await ensureUserInProfiles(session.user);
-            await loadUsers(session.user.id);
-        } else {
-            log('Нет сессии');
-            unauthedDiv.classList.remove('hidden');
-            authedDiv.classList.add('hidden');
-        }
-    }
+    // Обработчики
+    googleLoginBtn?.addEventListener('click', login);
+    logoutMainBtn?.addEventListener('click', logout);
+    sendMessageBtn?.addEventListener('click', sendMessage);
+    messageInput?.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    statsModalBtn?.addEventListener('click', showStats);
+    themeToggleBtn?.addEventListener('click', toggleTheme);
+    closeStatsBtn?.addEventListener('click', () => statsModal.classList.remove('active'));
+    statsModal?.addEventListener('click', e => { if (e.target === statsModal) statsModal.classList.remove('active'); });
     
-    // Подписка на изменения авторизации
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        log('Auth state change: ' + event);
-        if (event === 'SIGNED_IN' && session) {
-            log('Пользователь вошёл: ' + session.user.email);
-            await ensureUserInProfiles(session.user);
-            unauthedDiv.classList.add('hidden');
-            authedDiv.classList.remove('hidden');
-            userEmailSpan.textContent = session.user.email;
-            myUserIdSpan.textContent = session.user.id;
-            await loadUsers(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-            log('Пользователь вышел');
-            unauthedDiv.classList.remove('hidden');
-            authedDiv.classList.add('hidden');
-        }
+    document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => setStatus(btn.dataset.action));
     });
-    
-    // Подписка на изменения в таблице profiles в реальном времени
-    supabase
-        .channel('profiles-channel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, async () => {
-            log('Изменение в profiles, перезагружаем...');
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && session.user) {
-                await loadUsers(session.user.id);
-            }
-        })
-        .subscribe();
-    
-    // Обработчики кнопок
-    googleBtn.onclick = signInWithGoogle;
-    logoutBtn.onclick = signOut;
-    
-    // Запуск
-    checkSession();
-    
-    log('Готово. Ждём действий...');
-</script>
 
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') onAuth(session?.user);
+        else if (event === 'SIGNED_OUT') onAuth(null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => onAuth(session?.user));
+    loadTheme();
+</script>
 </body>
 </html>
